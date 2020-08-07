@@ -34,8 +34,8 @@ const CartProvider: React.FC = ({ children }) => {
       const productsFromStorage = await AsyncStorage.getItem(
         '@GoBarber:products',
       );
-      if (productsFromStorage !== null) {
-        setProducts(JSON.parse(productsFromStorage));
+      if (productsFromStorage) {
+        setProducts([...JSON.parse(productsFromStorage)]);
       }
     }
 
@@ -44,28 +44,24 @@ const CartProvider: React.FC = ({ children }) => {
 
   const addToCart = useCallback(
     async (product: Product) => {
+      let addProducts = [];
       const findProduct = products.find(item => item.id === product.id);
-      if (!findProduct) {
-        const newProduct = { ...product, quantity: 1 };
-        await AsyncStorage.setItem(
-          '@GoMarket:products',
-          JSON.stringify([...products, newProduct]),
-        );
-        setProducts([...products, newProduct]);
-      } else {
-        const addProduct = products.map(item => {
-          if (item === findProduct) {
-            item.quantity += 1;
-          }
-          return item;
-        });
 
-        await AsyncStorage.setItem(
-          '@GoMarket:products',
-          JSON.stringify(addProduct),
+      if (findProduct) {
+        addProducts = products.map(item =>
+          item.id === product.id
+            ? { ...product, quantity: item.quantity + 1 }
+            : item,
         );
-        setProducts(addProduct);
+      } else {
+        addProducts = [...products, { ...product, quantity: 1 }];
       }
+
+      await AsyncStorage.setItem(
+        '@GoMarket:products',
+        JSON.stringify(addProducts),
+      );
+      setProducts(addProducts);
     },
     [products],
   );
